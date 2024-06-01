@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "gan"
+version = "0.1.0"
+description = ""
+authors = ["Regina Pupyeva <r.zelenaya@internet.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+tensorflow = "^2.16.1"
+horovod = "^0.28.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
