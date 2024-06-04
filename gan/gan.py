@@ -2,12 +2,12 @@ import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.layers import (Input, Conv2D, Flatten, Dense, Dropout, BatchNormalization, UpSampling2D,
                                      Reshape, Activation, LeakyReLU)
-import horovod.tensorflow.keras as hvd
-import os
-import sys
-from horovod import spark
+# import horovod.tensorflow.keras as hvd
+# from horovod import spark
+# import os
+# import sys
 
-batch_size = 16
+batch_size = 32
 data_path = '/home/regina/Python/dataset'
 latent_dim = 250
 data = keras.utils.image_dataset_from_directory(data_path, batch_size=batch_size, image_size=(512, 512),
@@ -67,11 +67,11 @@ loss_fn = keras.losses.BinaryCrossentropy()
 generator_optimizer = keras.optimizers.Adamax(1.5e-4, 0.5)
 discriminator_optimizer = keras.optimizers.Adamax(1.5e-4, 0.5)
 
-generator_optimizer = hvd.DistributedOptimizer(generator_optimizer)
-discriminator_optimizer = hvd.DistributedOptimizer(discriminator_optimizer)
+# generator_optimizer = hvd.DistributedOptimizer(generator_optimizer)
+# discriminator_optimizer = hvd.DistributedOptimizer(discriminator_optimizer)
 
 
-def train_step(batch_real_images, epoch1, callbacks):
+def train_step(batch_real_images, epoch1):  #callbacks
     noise = tf.random.normal(shape=(batch_size, latent_dim))
     generated_images = generator(noise, training=True)
     combined_images = tf.concat([generated_images, batch_real_images], axis=0)
@@ -96,51 +96,53 @@ def train_step(batch_real_images, epoch1, callbacks):
     grads = tape.gradient(g_loss, generator.trainable_variables)
     generator_optimizer.apply_gradients(zip(grads, generator.trainable_variables))
 
-    for callback in callbacks:
-        callback.on_epoch_end()
+    # for callback in callbacks:
+    #     callback.on_epoch_end()
 
     return 'Epoch:', epoch1, 'Discriminator loss:', d_loss, 'Generator loss:', g_loss
 
 
 def train_hvd():
-    import tempfile
-    import os
-    import shutil
-    import atexit
-    from horovod.tensorflow.keras import callbacks
-
-    hvd.init()
-
-    gpu = tf.config.experimental.list_physical_devises("GPU")
-    tf.config.experimental.set_memory_growth(gpu, True)
-    if gpu:
-        tf.config.experimental.set_visible_devices(gpu[hvd.local_rank()], "GPU")
-
-    callbacks = [callbacks.BroadcastGlobalVariablesCallback(0),]
-
-    ckpt_dir = tempfile.mkdtemp()
-    ckpt_file = os.path.join(ckpt_dir, 'checkpoint.h5')
-    atexit.register(lambda: shutil.rmtree(ckpt_dir))
-
-    if hvd.rank() == 0:
-        callbacks.append(keras.callbacks.ModelCheckpoint(ckpt_file, monitor='loss', mode='min', save_best_only=True))
+    # import tempfile
+    # import os
+    # import shutil
+    # import atexit
+    # from horovod.tensorflow.keras import callbacks
+    #
+    # hvd.init()
+    #
+    # gpu = tf.config.experimental.list_physical_devises("GPU")
+    # tf.config.experimental.set_memory_growth(gpu, True)
+    # if gpu:
+    #     tf.config.experimental.set_visible_devices(gpu[hvd.local_rank()], "GPU")
+    #
+    # callbacks = [callbacks.BroadcastGlobalVariablesCallback(0),]
+    # 
+    # ckpt_dir = tempfile.mkdtemp()
+    # ckpt_file = os.path.join(ckpt_dir, 'checkpoint.h5')
+    # atexit.register(lambda: shutil.rmtree(ckpt_dir))
+    #
+    # if hvd.rank() == 0:
+    #     callbacks.append(keras.callbacks.ModelCheckpoint(ckpt_file, monitor='loss', mode='min', save_best_only=True))
 
     for epoch in range(250):
         real_images = next(iter(data))
-        train_step(real_images, epoch, callbacks)
+        # train_step(real_images, epoch, callbacks)
+        train_step(real_images, epoch)
 
-        if hvd.rank() == 0:
-            with open(ckpt_file, 'rb') as f:
-                return f.read()
+        # if hvd.rank() == 0:
+        #     with open(ckpt_file, 'rb') as f:
+        #         return f.read()
+        #
 
-
-lr_single_node = 0.1
-num_proc = 3
-
-best_model_bytes = spark.run(train_hvd(), args=(lr_single_node,),
-                             num_proc=num_proc, env=os.environ.copy(),
-                             stdout=sys.stdout, stderr=sys.stderr,
-                             verbose=2, prefix_output_with_timestamp=True)[0]
+# lr_single_node = 0.1
+# num_proc = 3
+#
+# best_model_bytes = spark.run(train_hvd(), args=(lr_single_node,),
+#                              num_proc=num_proc, env=os.environ.copy(),
+#                              stdout=sys.stdout, stderr=sys.stderr,
+#                              verbose=2, prefix_output_with_timestamp=True)[0]
+#
 
 
 def generate_and_save_images(model):
