@@ -1,5 +1,5 @@
 import tensorflow as tf
-import keras
+import tensorflow.keras as keras
 from tensorflow.keras.layers import (Input, Conv2D, Flatten, Dense, Dropout, BatchNormalization, UpSampling2D,
                                      Reshape, Activation, LeakyReLU)
 import horovod.tensorflow.keras as hvd
@@ -107,7 +107,7 @@ def train_hvd():
     import os
     import shutil
     import atexit
-    from horovod.horovod.tensorflow.keras import callbacks
+    from horovod.tensorflow.keras import callbacks
 
     hvd.init()
 
