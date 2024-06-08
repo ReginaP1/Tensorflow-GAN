@@ -8,7 +8,7 @@ from tensorflow.keras.layers import (Input, Conv2D, Flatten, Dense, Dropout, Bat
 # import sys
 
 batch_size = 32
-data_path = '/home/regina/Python/dataset'
+data_path = '.../dataset'
 latent_dim = 250
 data = keras.utils.image_dataset_from_directory(data_path, batch_size=batch_size, image_size=(512, 512),
                                                 label_mode=None, shuffle=True)
@@ -151,10 +151,10 @@ def generate_and_save_images(model):
     generated_image = model(noise, training=True)
     for o in range(img_num):
         img = keras.preprocessing.image.array_to_img(generated_image[o])
-        img.save('/home/regina/Python/dataset/generated_images/image{:02d}.png'.format(o))
+        img.save('.../dataset/generated_images/image{:02d}.png'.format(o))
 
 
 generate_and_save_images(generator)
 
-generator.save('/home/regina/Python/generator.h5')
-discriminator.save('/regina/home/Python/discriminator.h5')
+generator.save('...generator.h5')
+discriminator.save('...discriminator.h5')
