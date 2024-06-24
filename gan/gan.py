@@ -8,10 +8,10 @@ from tensorflow.keras.layers import (Input, Conv2D, Flatten, Dense, Dropout, Bat
 # import sys
 
 batch_size = 32
-data_path = '.../dataset'
+data_path = 'Tensorflow-GAN-with-horovod/dataset'
 latent_dim = 250
-data = keras.utils.image_dataset_from_directory(data_path, batch_size=batch_size, image_size=(512, 512),
-                                                label_mode=None, shuffle=True)
+data = (keras.utils.image_dataset_from_directory(
+    data_path, batch_size=batch_size, image_size=(512, 512), label_mode=None, shuffle=True))
 
 
 def build_generator():
@@ -39,7 +39,7 @@ def build_discriminator():
     x = Conv2D(32, kernel_size=3, strides=2, padding='same', groups=8)(inputs)
     x = LeakyReLU(alpha=0.2)(x)
     x = Dropout(0.1)(x)
-    x = Conv2D(64, kernel_size=3, strides=1, padding='same', groups=16)(x)
+    x = Conv2D(64, kernel_size=3, padding='same', groups=16)(x)
     x = BatchNormalization(momentum=0.8)(x)
     x = LeakyReLU(negative_slope=0.2)(x)
     x = Dropout(0.1)(x)
@@ -151,10 +151,7 @@ def generate_and_save_images(model):
     generated_image = model(noise, training=True)
     for o in range(img_num):
         img = keras.preprocessing.image.array_to_img(generated_image[o])
-        img.save('.../dataset/generated_images/image{:02d}.png'.format(o))
+        img.save('Tensorflow-GAN-with-horovod/dataset/generated_images/image{:02d}.png'.format(o))
 
 
 generate_and_save_images(generator)
-
-generator.save('...generator.h5')
-discriminator.save('...discriminator.h5')
